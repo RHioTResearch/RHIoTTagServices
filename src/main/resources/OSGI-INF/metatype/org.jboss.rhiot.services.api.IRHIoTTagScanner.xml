@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2011, 2016 Red Hat and/or its affiliates
+
+     All rights reserved. This program and the accompanying materials
+     are made available under the terms of the Eclipse Public License v1.0
+     which accompanies this distribution, and is available at
+     http://www.eclipse.org/legal/epl-v10.html
+
+    Contributors:
+      Red Hat
+
+Metatype Service information for the IRHIoTTagScanner
+-->
+<MetaData xmlns="http://www.osgi.org/xmlns/metatype/v1.2.0" localization="en_us">
+    <OCD id="org.jboss.rhiot.services.api.IRHIoTTagScanner"
+         name="RHIoTTagScanner" description="A BLE scanner for parsing RHIoTTag advertising data">
+
+        <Icon resource="OSGI-INF/rhiottag.png" size="32" />
+
+        <AD id="hciDev" name="hciDev"
+            description="The hci device interface one would pass as the -i option to hcidump"
+            type="String" cardinality="1" required="false" default='hci0'/>
+
+    </OCD>
+
+    <Designate pid="org.jboss.rhiot.services.api.IRHIoTTagScanner">
+        <Object ocdref="org.jboss.rhiot.services.api.IRHIoTTagScanner"/>
+    </Designate>
+</MetaData>
