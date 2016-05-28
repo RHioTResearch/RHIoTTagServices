@@ -22,6 +22,9 @@ Metatype Service information for the IRHIoTTagScanner
         <AD id="hciDev" name="hciDev"
             description="The hci device interface one would pass as the -i option to hcidump"
             type="String" cardinality="1" required="false" default='hci0'/>
+        <AD id="hcidumpDebugMode" name="hcidumpDebugMode"
+            description="The debug mode setting for the HCIDump scanner native code"
+            type="Boolean" cardinality="1" required="false" default='false'/>
 
     </OCD>
 
