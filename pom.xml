@@ -17,8 +17,8 @@
     <packaging>bundle</packaging>
 
     <properties>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+        <maven.compiler.source>1.7</maven.compiler.source>
         <maven-bundle-plugin.version>3.0.1</maven-bundle-plugin.version>
     </properties>
 
@@ -94,14 +94,6 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>RHIoTTagScanner</Bundle-Name>
-                        <Include-Resource>
-                            {maven-resources},
-                            lib=${project.basedir}/src/main/lib
-                        </Include-Resource>
-
-                        <Bundle-NativeCode>
-                            lib/linux/x86_64/libscannerJni.so;osname=linux
-                        </Bundle-NativeCode>
                         <Service-Component>OSGI-INF/*.xml</Service-Component>
                     </instructions>
                 </configuration>
