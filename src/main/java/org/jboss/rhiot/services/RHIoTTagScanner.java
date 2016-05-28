@@ -47,7 +47,7 @@ public class RHIoTTagScanner implements ConfigurableComponent, IRHIoTTagScanner,
     }
 
     public void updated(Map<String, Object> properties) {
-        System.out.printf("RHIoTTagScanner.updated; Bundle " + APP_ID + " has stopped!\n");
+        System.out.printf("RHIoTTagScanner.updated; Bundle " + APP_ID + " has updated!\n");
         String hciDev = properties.get("hciDev").toString();
         boolean debugMode = (Boolean) properties.get("hcidumpDebugMode");
         System.out.printf("hciDev=%s\n", hciDev);
