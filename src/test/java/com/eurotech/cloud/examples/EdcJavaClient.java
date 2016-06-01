@@ -39,7 +39,7 @@ public class EdcJavaClient implements EdcCallbackHandler
     private static final String BROKER_URL   = "mqtt://broker-sandbox.everyware-cloud.com:1883";  // URL address of broker
     private static final String CLIENT_ID    = "sstark-client";                                // Unique Client ID of this client device
     private static final String USERNAME     = "s-stark";                            // Username in account, to use for publishing
-    private static final String PASSWORD     = "A8LEMP5!s9Gvk!";                                 // Password associated with Username
+    private static final String PASSWORD     = "********";                                 // Password associated with Username
     //
     // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
