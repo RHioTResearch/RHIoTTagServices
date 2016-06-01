@@ -15,12 +15,37 @@ The Declarative Service descriptor for the IRHIoTTagScanner service implementati
 -->
 <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0"
                name="org.jboss.rhiot.services.api.IRHIoTTagScanner"
-               configuration-policy="optional" enabled="true" immediate="true"
-               activate="activate" deactivate="deactivate" modified="updated">
+               activate="activate"
+               deactivate="deactivate"
+               modified="updated"
+               enabled="true"
+               immediate="true"
+               configuration-policy="require">
     <implementation class="org.jboss.rhiot.services.RHIoTTagScanner"/>
+    <property name="service.pid" type="String" value="org.jboss.rhiot.services.api.IRHIoTTagScanner"/>
+
     <service>
         <provide interface="org.jboss.rhiot.services.api.IRHIoTTagScanner"/>
     </service>
 
-    <property name="service.pid" type="String" value="org.jboss.rhiot.services.api.IRHIoTTagScanner"/>
+    <reference name="CloudService"
+               policy="static"
+               bind="setCloudService"
+               unbind="unsetCloudService"
+               cardinality="1..1"
+               interface="org.eclipse.kura.cloud.CloudService"/>
+
+    <reference name="HttpService"
+               policy="static"
+               bind="setHttpService"
+               unbind="unsetHttpService"
+               cardinality="1..1"
+               interface="org.osgi.service.http.HttpService"/>
+
+    <reference name="ILaserTag"
+               policy="dynamic"
+               bind="setLaserTagInfo"
+               unbind="unsetLaserTagInfo"
+               cardinality="0..n"
+               interface="org.jboss.rhiot.services.api.ILaserTag"/>
 </scr:component>

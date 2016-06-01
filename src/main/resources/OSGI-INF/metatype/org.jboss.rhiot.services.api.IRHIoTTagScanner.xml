@@ -26,6 +26,57 @@ Metatype Service information for the IRHIoTTagScanner
             description="The debug mode setting for the HCIDump scanner native code"
             type="Boolean" cardinality="1" required="false" default='false'/>
 
+        <AD id="publish.semanticTopic"  
+            name="publish.semanticTopic"
+            type="String"
+            cardinality="0" 
+            required="true"
+            default="data" 
+            description="Default semantic topic to publish the RHIoTTag data to."/>
+        
+        <AD id="publish.qos"  
+            name="publish.qos"
+            type="Integer"
+            cardinality="0" 
+            required="true"
+            default="0" 
+            description="Default QoS to publish the messages with.">
+           <Option label="Fire and forget" value="0"/>
+           <Option label="Al least once" value="1"/>          
+           <Option label="At most once" value="2"/>
+        </AD>
+
+        <AD id="publish.retain"  
+            name="publish.retain"
+            type="Boolean"
+            cardinality="0" 
+            required="true"
+            default="false" 
+            description="Default retaing flag for the published messages."/>
+
+        <AD id="game.leftBtnWindow"
+            name="game.leftBtnWindow"
+            type="Integer"
+            cardinality="0"
+            required="true"
+            default="100"
+            description="The elapsed time in ms between the press of left button and laser shot is counted."/>
+
+        <AD id="game.clipCount"
+            name="game.clipCount"
+            type="Integer"
+            cardinality="0"
+            required="true"
+            default="12"
+            description="The number of shots before one must reload with right button."/>
+
+        <AD id="game.duration"
+            name="game.duration"
+            type="Integer"
+            cardinality="0"
+            required="true"
+            default="60"
+            description="The time in seconds a game lasts."/>
     </OCD>
 
     <Designate pid="org.jboss.rhiot.services.api.IRHIoTTagScanner">
