@@ -8,7 +8,7 @@ public interface ILaserTag {
      *
      * @return the ble address of the RHIoTTag
      */
-    public short[] getTagAddress();
+    public String getTagAddress();
 
     /**
      *

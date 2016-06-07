@@ -1,11 +1,14 @@
 package org.jboss.rhiot.services;
 
+import org.jboss.rhiot.ble.GAP_UUIDs;
 import org.jboss.rhiot.ble.bluez.AdEventInfo;
+import org.jboss.rhiot.ble.bluez.AdStructure;
 import org.jboss.rhiot.ble.bluez.HCIDump;
 import org.jboss.rhiot.ble.bluez.IAdvertEventCallback;
 import org.jboss.rhiot.ble.bluez.RHIoTTag;
-import org.jboss.rhiot.services.api.ILaserTag;
+import org.jboss.rhiot.services.api.IGatewayTagConfig;
 import org.jboss.rhiot.services.api.IRHIoTTagScanner;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.ComponentException;
 import org.eclipse.kura.cloud.CloudClient;
@@ -13,10 +16,13 @@ import org.eclipse.kura.cloud.CloudClientListener;
 import org.eclipse.kura.cloud.CloudService;
 import org.eclipse.kura.configuration.ConfigurableComponent;
 import org.eclipse.kura.message.KuraPayload;
+import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
+import org.osgi.service.prefs.PreferencesService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteOrder;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
@@ -24,25 +30,33 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.jboss.rhiot.ble.bluez.RHIoTTag.SERVICE_DATA_PREFIX;
 
 /**
  * The main entry point for the scanner facade on top of the HCIDump general scanner that extracts RHIoTTag specific
  * advertising events and
  */
 public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListener, IRHIoTTagScanner, IAdvertEventCallback {
+	private static final Logger log = LoggerFactory.getLogger(RHIoTTagScanner.class);
+
     private static final String APP_ID = "org.jboss.rhiot.services.RHIoTTagScanner";
 	private static final String   PUBLISH_TOPIC_PROP_NAME  = "publish.semanticTopic";
 	private static final String   PUBLISH_QOS_PROP_NAME    = "publish.qos";
 	private static final String   PUBLISH_RETAIN_PROP_NAME = "publish.retain";
 
 	private Map<String, Object> properties;
-	private Map<String, ILaserTag> tags;
+	private Map<String, String> addressToNameMap;
 	private BlockingDeque<RHIoTTag> eventQueue;
     private volatile boolean scannerInitialized;
 	/** */
 	private volatile int gameDurationSecs;
 	private CloudService cloudService;
 	private CloudClient cloudClient;
+	private AtomicReference<IGatewayTagConfig> gatewayTagConfig = new AtomicReference<>();
+	private PreferencesService preferencesService;
+	private RHIoTServlet servlet;
 
 	public void setCloudService(CloudService cloudService) {
 		this.cloudService = cloudService;
@@ -59,33 +73,37 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
 	}
 
 	public void setHttpService(HttpService httpService) {
-		RHIoTServlet servlet = new RHIoTServlet(this);
+		servlet = new RHIoTServlet(this, preferencesService);
 		try {
-			httpService.registerServlet("/rhiot", servlet, null, null);
+			HttpContext ctx = httpService.createDefaultHttpContext();
+			httpService.registerServlet("/rhiot", servlet, null, ctx);
+			log("Listening at /rhiot for REST requests");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void setLaserTagInfo(ILaserTag tagInfo) {
-		log("+++ setLaserTagInfo, info=%s\n", tagInfo);
-		short[] address = tagInfo.getTagAddress();
-		String addressKey = Utils.toString(address);
-		if(tags.containsKey(addressKey)) {
-			ILaserTag prev = tags.get(addressKey);
-			log("Warning, tag(%s) conflicts: %s with: %s", addressKey, tagInfo.getName(), prev.getName());
-		}
-		tags.put(addressKey, tagInfo);
+	public void setGatewayTagConfig(IGatewayTagConfig config) {
+		this.gatewayTagConfig.set(config);
 	}
-	public void unsetLaserTagInfo(ILaserTag tagInfo) {
-		log("--- unsetLaserTagInfo, info=%s\n", tagInfo);
-		short[] address = tagInfo.getTagAddress();
-		String addressKey = Utils.toString(address);
-		tags.remove(addressKey);
+	public void unsetGatewayTagConfig(IGatewayTagConfig config) {
+		this.gatewayTagConfig.set(null);
 	}
 
-	public Collection<ILaserTag> getTags() {
-		return tags.values();
+	public void setPreferencesService(PreferencesService preferencesService) {
+		this.preferencesService = preferencesService;
+		if(servlet != null)
+			servlet.setPreferencesService(preferencesService);
+	}
+	public void unsetPreferencesService(PreferencesService preferencesService) {
+		this.preferencesService = null;
+	}
+
+	public void updateTagInfo(String address, String name) {
+		addressToNameMap.put(address, name);
+	}
+	public Map<String,String> getTags() {
+		return addressToNameMap;
 	}
 
     @Override
@@ -121,25 +139,39 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
 
 	@Override
 	public boolean advertEvent(AdEventInfo info) {
-		System.out.printf("+++ advertEvent, rssi=%d, time=%s\n", info.getRssi(), new Date(info.getTime()));
+		if(log.isDebugEnabled())
+			log.debug(String.format("+++ advertEvent(%s), count=%d, rssi=%d, time=%s\n", info.getBDaddrAsString(), info.getCount(), info.getRssi(), new Date(info.getTime())));
+		if(log.isTraceEnabled()) {
+			for(AdStructure ads : info.getData()) {
+				log.trace(ads.toString());
+			}
+		}
 		RHIoTTag tag = RHIoTTag.create(info);
 		if(tag != null) {
 			String key = tag.getAddressString();
-			ILaserTag tagInfo = tags.get(key);
-			String name = tagInfo != null ? tagInfo.getName() : "<unamed>";
+			String name = addressToNameMap != null ? addressToNameMap.get(key) : null;
 			log("(%s: %s\n", name, tag.toFullString());
 		}
 		return false;
 	}
 
 	protected void activate(ComponentContext componentContext, Map<String, Object> properties) {
-        System.out.printf("RHIoTTagScanner.activate; Bundle " + APP_ID + " has started with: %s\n", properties);
+        log("RHIoTTagScanner.activate; Bundle " + APP_ID + " has started with: %s\n", properties.entrySet());
+		ServiceReference prefRef = componentContext.getBundleContext().getServiceReference(PreferencesService.class);
+		if(prefRef != null)
+			log("Found PreferencesService ref in bundle: %d", prefRef.getBundle().getBundleId());
+		else
+			log("Failed to find PreferencesService");
 		this.properties = properties;
 		this.eventQueue = new LinkedBlockingDeque<>();
-        System.out.printf("hciDev=%s\n", properties.get("hciDev"));
+		Object tagNames = properties.get("rhiot.tag.name");
+		Object tagAddresses = properties.get("rhiot.tag.address");
 
-		if(tags == null) {
-			tags = new ConcurrentHashMap<>();
+		System.out.printf("hciDev=%s\n", properties.get("hciDev"));
+		System.out.printf("tagNames=%s; tagAddresses=%s\n", tagNames, tagAddresses);
+
+		if(addressToNameMap == null) {
+			addressToNameMap = new ConcurrentHashMap<>();
 		}
 		// get the mqtt client for this application
 		try  {
@@ -169,9 +201,8 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
         HCIDump.setAdvertEventCallback(null);
         HCIDump.freeScanner();
         scannerInitialized = false;
-		tags.clear();
 		eventQueue.clear();
-		tags = null;
+		addressToNameMap = null;
 		eventQueue = null;
         System.out.printf("RHIoTTagScanner.deactivate; Bundle " + APP_ID + " has stopped!\n");
     }
@@ -212,7 +243,8 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
     }
     
     private void log(String format, Object ...args) {
-    	System.out.printf(format, args);
+		String msg = String.format(format, args);
+    	log.info(msg);
     }
 
 	private void handleTagEvents() {
@@ -256,4 +288,5 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
 			log("Cannot publish topic: %s\n", topic, e);
 		}
 	}
+
 }

@@ -77,6 +77,9 @@ Metatype Service information for the IRHIoTTagScanner
             required="true"
             default="60"
             description="The time in seconds a game lasts."/>
+
+        <AD id="getTagName" type="String" name="rhiot.tag.name" description="The name you assign to your RHIoTTag" cardinality="8" default="1,2,3,4,5,6,7,8"/>
+        <AD id="getTagAddress" type="String" name="rhiot.tag.address" description="The BLE address on your RHIoTTag" cardinality="8" default="1,2,3,4,5,6,7,8"/>
     </OCD>
 
     <Designate pid="org.jboss.rhiot.services.api.IRHIoTTagScanner">

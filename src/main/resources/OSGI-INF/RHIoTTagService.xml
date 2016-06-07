@@ -42,10 +42,26 @@ The Declarative Service descriptor for the IRHIoTTagScanner service implementati
                cardinality="1..1"
                interface="org.osgi.service.http.HttpService"/>
 
-    <reference name="ILaserTag"
-               policy="dynamic"
-               bind="setLaserTagInfo"
-               unbind="unsetLaserTagInfo"
-               cardinality="0..n"
-               interface="org.jboss.rhiot.services.api.ILaserTag"/>
+    <!--
+        <reference name="PrefService"
+                   policy="dynamic"
+                   bind="setPreferencesService"
+                   unbind="unsetPreferencesService"
+                   cardinality="1..1"
+                   interface="org.osgi.service.prefs.PreferencesService"/>
+
+        <reference name="ILaserTag"
+                   policy="dynamic"
+                   bind="setLaserTagInfo"
+                   unbind="unsetLaserTagInfo"
+                   cardinality="0..n"
+                   interface="org.jboss.rhiot.services.api.ILaserTag"/>
+        <reference name="IGatewayTagConfig"
+                   policy="static"
+                   bind="setGatewayTagConfig"
+                   unbind="unsetGatewayTagConfig"
+                   cardinality="1..1"
+                   interface="org.jboss.rhiot.services.api.IGatewayTagConfig"/>
+    -->
+
 </scr:component>
