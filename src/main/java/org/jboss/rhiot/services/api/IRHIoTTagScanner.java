@@ -25,7 +25,7 @@ public interface IRHIoTTagScanner {
    static final String GW_LAST_GAME_SCORE = "rhiotTagGW.score";
    static final String GW_LAST_GAME_SCORE_HITS = "rhiotTagGW.hits";
    static final String GW_LAST_GAME_SCORE_TAG_ADDRESS = "rhiotTagGW.scoreTagAddress";
-   static final String GW_LAST_GAME_NEW_HIGH_SCORE = "rhiotTagGW.isNewighScore";
+   static final String GW_LAST_GAME_NEW_HIGH_SCORE = "rhiotTagGW.isNewHighScore";
 
 
    // REST endpoints
