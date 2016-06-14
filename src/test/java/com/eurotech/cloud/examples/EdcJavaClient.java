@@ -35,11 +35,12 @@ public class EdcJavaClient implements EdcCallbackHandler
     // >>>>>> Set these variables according to your Cloud user account
     //
     private static final String ACCOUNT_NAME = "Red-Hat";                                    // Your Account name in Cloud
-    private static final String ASSET_ID     = "sstark-client";                                       // Unique Asset ID of this client device
+    private static final String ASSET_ID     = "DN2016-GW0-client0";                                    // Unique Asset ID of this client device
     private static final String BROKER_URL   = "mqtt://broker-sandbox.everyware-cloud.com:1883";  // URL address of broker
-    private static final String CLIENT_ID    = "sstark-client";                                // Unique Client ID of this client device
+    private static final String CLIENT_ID    = "DN2016-GW0-client0";                                // Unique Client ID of this client device
     private static final String USERNAME     = "s-stark";                            // Username in account, to use for publishing
     private static final String PASSWORD     = "********";                                 // Password associated with Username
+    private static final String SUBSCRIBE_TOPIC = "DN2016-GW0/org.jboss.rhiot.services.RHIoTTagScanner/data";
     //
     // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -47,6 +48,9 @@ public class EdcJavaClient implements EdcCallbackHandler
     public static void main(String[] args)
             throws Exception
     {
+        String password = System.getenv("PASSWORD");
+        if(password == null)
+            password = PASSWORD;
         //
         // Configure: create client configuration, and set its properties
         //
@@ -56,7 +60,7 @@ public class EdcJavaClient implements EdcCallbackHandler
                 BROKER_URL,
                 CLIENT_ID,
                 USERNAME,
-                PASSWORD);
+                password);
 
         EdcDeviceProfileFactory profFactory = EdcDeviceProfileFactory.getInstance();
         EdcDeviceProfile prof = profFactory.newEdcDeviceProfile();
@@ -82,7 +86,7 @@ public class EdcJavaClient implements EdcCallbackHandler
 
         log.info("Subscribe to data topics of all assets in the account");
         //edcCloudClient.subscribe("+", "#", 1);
-        edcCloudClient.subscribe("sstark-gateway/org.jboss.rhiot.services.RHIoTTagScanner/data", "+", 1);
+        edcCloudClient.subscribe(SUBSCRIBE_TOPIC, "+", 1);
 
         System.out.println("Subscribe to control topics of all assets in the account");
         edcCloudClient.controlSubscribe("+", "#", 1);
