@@ -25,10 +25,7 @@ public interface IRHIoTTagScanner {
    static final String GW_LAST_GAME_SCORE = "rhiotTagGW.score";
    static final String GW_LAST_GAME_SCORE_HITS = "rhiotTagGW.hits";
    static final String GW_LAST_GAME_SCORE_TAG_ADDRESS = "rhiotTagGW.scoreTagAddress";
-   // Set 6, the information about the high game scores sent on game end when a new high score is achieved
-   static final String GW_HIGH_GAME_SCORE = "rhiotTagGW.highScore";
-   static final String GW_HIGH_GAME_SCORE_HITS = "rhiotTagGW.highScoreHits";
-   static final String GW_HIGH_GAME_SCORE_TAG_ADDRESS = "rhiotTagGame.highScoreTagAddress";
+   static final String GW_LAST_GAME_NEW_HIGH_SCORE = "rhiotTagGW.isNewighScore";
 
 
    // REST endpoints
