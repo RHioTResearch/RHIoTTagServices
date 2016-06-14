@@ -10,7 +10,7 @@
 
     <groupId>org.jboss.rhiot.beacon</groupId>
     <artifactId>rhiot-tag-services</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.9</version>
 
     <name>RHIoTTag Services</name>
     <description>Services related to the RHIoTTag custom beacon</description>
@@ -79,14 +79,18 @@
             <version>1.2.16</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.jboss.rhiot.ble</groupId>
             <artifactId>core-ble-scanner</artifactId>
-            <version>1.1.5-SNAPSHOT</version>
+            <version>1.1.8</version>
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.squirrelframework</groupId>
+            <artifactId>squirrel-foundation</artifactId>
+            <version>0.3.8</version>
+        </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -108,8 +112,25 @@
         </dependency>
     </dependencies>
 
+    <distributionManagement>
+        <repository>
+            <id>internal.repo</id>
+            <name>Temporary Staging Repository</name>
+            <url>file:///home/sstark/Dev/DevNation2016MvnRepo/target/mvn-repo</url>
+        </repository>
+    </distributionManagement>
+
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.2</version>
+                <configuration>
+                    <altDeploymentRepository>
+                        internal.repo::default::file:///home/sstark/Dev/DevNation2016MvnRepo/target/mvn-repo
+                    </altDeploymentRepository>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -146,13 +167,11 @@
                         <Bundle-Name>RHIoTTagScanner</Bundle-Name>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
-                        <!--Private-Package>com.google.*,javax.ws.rs.*</Private-Package-->
+                        <Import-Package>!sun.misc.*,*</Import-Package>
                         <Service-Component>OSGI-INF/*.xml</Service-Component>
                     </instructions>
                 </configuration>
             </plugin>
-
-
         </plugins>
     </build>
 </project>
