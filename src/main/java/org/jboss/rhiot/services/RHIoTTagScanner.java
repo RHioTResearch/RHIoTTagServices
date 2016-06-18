@@ -474,7 +474,7 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
                info("New high score: %s", highScore);
             }
             // Publish scores separately to a distinct topic with higher qos
-            publishScore(score, hits, tagAddress, isNewHighScore);
+            publishScore(tag.getName(), score, hits, tagAddress, isNewHighScore);
          }
       }
 
@@ -551,17 +551,19 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
 
    /**
     * Publish a new high score with qos=1 and retain=true to the gateway gameScores node
+    * @param name - name associated with the tag
     * @param score - game score
     * @param hits - number of target hits in the game
     * @param tagAddress - address of game RHIoTTag
     * @param isHighScore - new high score flag
     */
-   private void publishScore(int score, int hits, String tagAddress, boolean isHighScore) {
+   private void publishScore(String name, int score, int hits, String tagAddress, boolean isHighScore) {
       String topic = "gameScores";
       Integer qos = 1;
 
       KuraPayload payload = new KuraPayload();
       payload.setTimestamp(new Date());
+      payload.addMetric(GW_LAST_GAME_TAG_NAME, name);
       payload.addMetric(GW_LAST_GAME_SCORE, score);
       payload.addMetric(GW_LAST_GAME_SCORE_HITS, hits);
       payload.addMetric(GW_LAST_GAME_SCORE_TAG_ADDRESS, tagAddress);

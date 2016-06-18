@@ -22,6 +22,7 @@ public interface IRHIoTTagScanner {
    static final String TAG_HIT_SCORE = "rhiotTag.hitScore";
    static final String TAG_HIT_RINGS_OFF_CENTER = "rhiotTag.hitRingsOffCenter";
    // Set 5, the information about the game scores sent on each game end
+   static final String GW_LAST_GAME_TAG_NAME = "rhiotTagGW.tagName";
    static final String GW_LAST_GAME_SCORE = "rhiotTagGW.score";
    static final String GW_LAST_GAME_SCORE_HITS = "rhiotTagGW.hits";
    static final String GW_LAST_GAME_SCORE_TAG_ADDRESS = "rhiotTagGW.scoreTagAddress";
