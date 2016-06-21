@@ -14,8 +14,11 @@ public interface IRHIoTTagScanner {
    static final String TAG_NEW_STATE = "rhiotTag.newState";
    static final String TAG_EVENT = "rhiotTag.event";
    // Set 3, the game progress information sent while the game is active.
+   static final String TAG_GAME_NAME = "rhiotTag.gameTagName";
+   static final String TAG_GAME_ADDRESS = "rhiotTag.gameTagAddress";
    static final String TAG_GAME_TIME_LEFT = "rhiotTag.gameTimeLeft";
    static final String TAG_GAME_SCORE = "rhiotTag.gameScore";
+   static final String TAG_GAME_HITS = "rhiotTag.gameHits";
    static final String TAG_SHOOTING_TIME_LEFT = "rhiotTag.shootingTimeLeft";
    static final String TAG_SHOTS_LEFT = "rhiotTag.shotsLeft";
    // Set 4, the information about a hit on the light sensor sent when a sensor reading above a threshold value is detected
@@ -30,8 +33,14 @@ public interface IRHIoTTagScanner {
 
 
    // REST endpoints
+   /** */
    String CLOUD_PW_PATH = "/cloud-password";
+   /** */
    String TAG_INFO_PATH = "/tags";
+   /** */
    String GAMESM_DIGRAPH_PATH = "/gamesm-digraph";
+   /** */
    String GAMESM_INFO_PATH = "/gamesm";
+   /** */
+   String INJECT_TAG_DATA_PATH = "/inject-tag-data";
 }
