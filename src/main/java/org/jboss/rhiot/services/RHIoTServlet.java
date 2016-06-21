@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.jboss.rhiot.ble.bluez.RHIoTTag;
 import org.jboss.rhiot.services.api.IRHIoTTagScanner;
 import org.jboss.rhiot.services.fsm.GameStateMachine;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Expose some of the RHIoTTagScanner information via REST
@@ -39,6 +41,41 @@ public class RHIoTServlet extends HttpServlet {
 
    public void setCloudPassword(String cloudPassword) {
       this.cloudPassword = cloudPassword;
+   }
+
+   /**
+    * PUT endpoint for injecting tag data
+    * @param req - request object
+    * @param resp - response object
+    * @throws ServletException
+    * @throws IOException
+    */
+   @Override
+   protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+      JsonParser parser = new JsonParser();
+      JsonElement json = parser.parse(req.getReader());
+      JsonObject jsonObj = json.getAsJsonObject();
+      String address = jsonObj.get("address").getAsString();
+      byte keys = jsonObj.get("keys").getAsByte();
+      int lux = jsonObj.get("lux").getAsInt();
+
+      String name = scanner.getTagInfo(address);
+      if(name == null) {
+         resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Tag address has no assigned name");
+      } else {
+         RHIoTTag tag = new RHIoTTag(address, keys, lux);
+         tag.setName(name+"Sim");
+         CompletableFuture<GameStateMachine.GameState> future = scanner.handleTagAsync(tag);
+         GameStateMachine.GameState state = null;
+         try {
+            state = future.get();
+            resp.setContentType("application/txt");
+            resp.getWriter().write(state.name());
+         } catch (Exception e) {
+            log.error("Failed to handle put for tag: "+address, e);
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         }
+      }
    }
 
    /**
@@ -121,9 +158,13 @@ public class RHIoTServlet extends HttpServlet {
     */
    private void sendGameSMInfo(HttpServletRequest req, HttpServletResponse resp) throws IOException {
       String address = req.getParameter("address");
-      resp.setContentType("application/txt");
-      String state = scanner.getAndPublishGameSMInfo(address);
-      resp.getWriter().write(state);
+      if(address == null) {
+         resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "No address parameter given");
+      } else {
+         resp.setContentType("application/txt");
+         String state = scanner.getAndPublishGameSMInfo(address);
+         resp.getWriter().write(state);
+      }
    }
 
    /**
