@@ -10,15 +10,15 @@
 
     <groupId>org.jboss.rhiot.beacon</groupId>
     <artifactId>rhiot-tag-services</artifactId>
-    <version>1.0.11</version>
+    <version>1.0.12</version>
 
     <name>RHIoTTag Services</name>
     <description>Services related to the RHIoTTag custom beacon</description>
     <packaging>bundle</packaging>
 
     <properties>
-        <maven.compiler.target>1.7</maven.compiler.target>
-        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
         <maven-bundle-plugin.version>3.0.1</maven-bundle-plugin.version>
     </properties>
 
@@ -82,7 +82,7 @@
         <dependency>
             <groupId>org.jboss.rhiot.ble</groupId>
             <artifactId>core-ble-scanner</artifactId>
-            <version>1.1.8</version>
+            <version>1.1.10</version>
             <scope>provided</scope>
         </dependency>
 
@@ -168,6 +168,7 @@
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                         <Import-Package>!sun.misc.*,*</Import-Package>
+                        <Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE)(version=1.7))"</Require-Capability>
                         <Service-Component>OSGI-INF/*.xml</Service-Component>
                     </instructions>
                 </configuration>
