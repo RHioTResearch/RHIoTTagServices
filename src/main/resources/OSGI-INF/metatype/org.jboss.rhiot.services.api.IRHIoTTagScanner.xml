@@ -85,6 +85,14 @@ Metatype Service information for the IRHIoTTagScanner
             required="false"
             description="The password to use for the CloudClient connections."/>
 
+        <AD id="debug.address"
+            name="debug.address"
+            type="String"
+            cardinality="0"
+            required="false"
+            default="A0:E6:F8:AD:2E:82"
+            description="Address of RHIoTTag to perform extra debug logging for"/>
+
         <!-- The mappings from the user tags BLE address to an assigned name -->
         <AD id="gw.tag0" type="String" name="gw.tag0" description="The address and name for RHIoTTag#0" cardinality="2" default="01:02:03:04:00,MyTag#0"/>
         <AD id="gw.tag1" type="String" name="gw.tag1" description="The address and name for RHIoTTag#1" cardinality="2" default="01:02:03:04:01,MyTag#1"/>
