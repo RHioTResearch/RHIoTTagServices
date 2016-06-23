@@ -160,6 +160,10 @@ public class RHIoTServlet extends HttpServlet {
       String address = req.getParameter("address");
       if(address == null) {
          resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "No address parameter given");
+      }
+      String name = scanner.getTagInfo(address);
+      if(name == null) {
+         resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Tag address has no assigned name");
       } else {
          resp.setContentType("application/txt");
          String state = scanner.getAndPublishGameSMInfo(address);
