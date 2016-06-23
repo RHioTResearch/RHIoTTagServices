@@ -260,8 +260,10 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
       boolean debugMode = false;
       if (properties.get("hcidumpDebugMode") != null)
          debugMode = (Boolean) properties.get("hcidumpDebugMode");
+      boolean skipJniInitialization = false;
+      if (properties.get("skipJniInitialization") != null)
+         skipJniInitialization = (Boolean) properties.get("skipJniInitialization");
       info("hciDev=%s\n", hciDev);
-      HCIDump.loadLibrary();
 
       String cloudPassword = (String) properties.get("cloud.password");
       if(cloudPassword == null) {
@@ -295,15 +297,18 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
          }
       }
       // Setup scanner
-      HCIDump.enableDebugMode(debugMode);
-      HCIDump.setAdvertEventCallback(this);
-      if (scannerInitialized == false) {
-         HCIDump.initScanner(hciDev, 512, ByteOrder.BIG_ENDIAN);
-         info("Initialized scanner\n");
-      } else {
-         HCIDump.freeScanner();
-         HCIDump.initScanner(hciDev, 512, ByteOrder.BIG_ENDIAN);
-         info("Reinitialized scanner\n");
+      if(!skipJniInitialization) {
+         HCIDump.loadLibrary();
+         HCIDump.enableDebugMode(debugMode);
+         HCIDump.setAdvertEventCallback(this);
+         if (scannerInitialized == false) {
+            HCIDump.initScanner(hciDev, 512, ByteOrder.BIG_ENDIAN);
+            info("Initialized scanner\n");
+         } else {
+            HCIDump.freeScanner();
+            HCIDump.initScanner(hciDev, 512, ByteOrder.BIG_ENDIAN);
+            info("Reinitialized scanner\n");
+         }
       }
       scannerInitialized = true;
    }
@@ -398,7 +403,7 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
     * @return the future for the handleTag result
     * @see #handleTag(RHIoTTag)
     */
-   CompletableFuture<GameStateMachine.GameState> handleTagAsync(RHIoTTag tag) {
+   public CompletableFuture<GameStateMachine.GameState> handleTagAsync(RHIoTTag tag) {
       CompletableFuture<GameStateMachine.GameState> future = CompletableFuture.supplyAsync(() -> handleTag(tag), publisher);
       return future;
    }
@@ -469,20 +474,27 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
       payload.addMetric(TAG_TEMP, tag.getTempC());
       payload.addMetric(TAG_KEYS, (int) tag.getKeys());
       payload.addMetric(TAG_LUX, tag.getLux());
+      int gameTimeLeft = gsm.getGameTimeLeft();
+      // General game information
+      int shotsLeft = gsm.getShotsLeft();
+      int shootingTimeLeft = gsm.getShootingTimeLeft();
+      if (gameTimeLeft <= 0)
+         shootingTimeLeft = 0;
+      int score = gsm.getScore();
       if(event != GameStateMachine.GameEvent.NOOP) {
-         info("from: %s to: %s on: %s", state, newState, event);
+         info("%s; from: %s to: %s on: %s", tag.getAddressString(), state, newState, event);
          payload.addMetric(TAG_PREV_STATE, state.name());
          payload.addMetric(TAG_NEW_STATE, newState.name());
          payload.addMetric(TAG_EVENT, event.name());
+         int hits = gsm.getHits();
+         String tagAddress = tag.getAddressString();
+
          // Add hit information if this was a hit
          if(event == GameStateMachine.GameEvent.HIT_DETECTED) {
             payload.addMetric(TAG_HIT_SCORE, gsm.getHitScore());
             payload.addMetric(TAG_HIT_RINGS_OFF_CENTER, gsm.getHitRingsOffCenter());
          }
 
-         int score = gsm.getScore();
-         int hits = gsm.getHits();
-         String tagAddress = tag.getAddressString();
          // Add game score information if this is the end of the game
          if(event == GameStateMachine.GameEvent.GAME_TIMEOUT) {
             boolean isNewHighScore = false;
@@ -495,20 +507,14 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
             // Publish scores separately to a distinct topic with higher qos
             publishGameScore(tag.getName(), tagAddress, score, hits, isNewHighScore);
          } else {
-            // General game information
-            int gameTimeLeft = gsm.getGameTimeLeft();
-            int shotsLeft = gsm.getShotsLeft();
-            int shootingTimeLeft = gsm.getShootingTimeLeft();
-            if (gameTimeLeft <= 0)
-               shootingTimeLeft = 0;
-            payload.addMetric(TAG_GAME_TIME_LEFT, gameTimeLeft);
-            payload.addMetric(TAG_GAME_SCORE, score);
-            payload.addMetric(TAG_SHOOTING_TIME_LEFT, shootingTimeLeft);
-            payload.addMetric(TAG_SHOTS_LEFT, shotsLeft);
             // Also publish to the gateway active games topic
             publishGameInfo(tag.getName(), tagAddress, score, hits, gameTimeLeft, shotsLeft, shootingTimeLeft);
          }
       }
+      payload.addMetric(TAG_GAME_TIME_LEFT, gameTimeLeft);
+      payload.addMetric(TAG_GAME_SCORE, score);
+      payload.addMetric(TAG_SHOOTING_TIME_LEFT, shootingTimeLeft);
+      payload.addMetric(TAG_SHOTS_LEFT, shotsLeft);
 
       // Publish the message
       try {
@@ -527,7 +533,12 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
     */
    private GameStateMachine.GameState publishGameState(String tagAddress) {
       GameStateMachine gsm = tagStateMachines.get(tagAddress);
-      GameStateMachine.GameState state = gsm != null ? gsm.getCurrentState() : GameStateMachine.GameState.IDLE;
+      if(gsm == null) {
+         gsm = newStateMachine();
+         gsm.start();
+         tagStateMachines.put(tagAddress, gsm);
+      }
+      GameStateMachine.GameState state = gsm.getCurrentState();
 
       String topicRoot = (String) properties.get(PUBLISH_TOPIC_PROP_NAME);
       String topic = topicRoot + "/" + tagAddress;
@@ -542,18 +553,16 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
       payload.addMetric(TAG_PREV_STATE, state.name());
       payload.addMetric(TAG_NEW_STATE, state.name());
       payload.addMetric(TAG_EVENT, GameStateMachine.GameEvent.NOOP.name());
-      if(gsm != null) {
-         int gameTimeLeft = gsm.getGameTimeLeft();
-         int shotsLeft = gsm.getShotsLeft();
-         int shootingTimeLeft = gsm.getShootingTimeLeft();
-         if(gameTimeLeft <= 0)
-            shootingTimeLeft = 0;
-         int gameScore = gsm.getScore();
-         payload.addMetric(TAG_GAME_TIME_LEFT, gameTimeLeft);
-         payload.addMetric(TAG_GAME_SCORE, gameScore);
-         payload.addMetric(TAG_SHOOTING_TIME_LEFT, shootingTimeLeft);
-         payload.addMetric(TAG_SHOTS_LEFT, shotsLeft);
-      }
+      int gameTimeLeft = gsm.getGameTimeLeft();
+      int shotsLeft = gsm.getShotsLeft();
+      int shootingTimeLeft = gsm.getShootingTimeLeft();
+      if(gameTimeLeft <= 0)
+         shootingTimeLeft = 0;
+      int gameScore = gsm.getScore();
+      payload.addMetric(TAG_GAME_TIME_LEFT, gameTimeLeft);
+      payload.addMetric(TAG_GAME_SCORE, gameScore);
+      payload.addMetric(TAG_SHOOTING_TIME_LEFT, shootingTimeLeft);
+      payload.addMetric(TAG_SHOTS_LEFT, shotsLeft);
 
       // Publish the message
       try {
@@ -562,7 +571,7 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
             debug("Published to: %s message: %s", topic, payload);
          info("Resent game state for tag: %s", tagAddress);
       } catch (Exception e) {
-         info("Failed to publish game state for tage: %s on topic: %s\n", tagAddress, topic, e);
+         info("Failed to publish game state for tag: %s on topic: %s\n", tagAddress, topic, e);
       }
 
       return state;
