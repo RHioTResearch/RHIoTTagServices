@@ -10,7 +10,7 @@
 
     <groupId>org.jboss.rhiot.beacon</groupId>
     <artifactId>rhiot-tag-services</artifactId>
-    <version>1.0.12</version>
+    <version>1.0.13</version>
 
     <name>RHIoTTag Services</name>
     <description>Services related to the RHIoTTag custom beacon</description>
@@ -34,6 +34,10 @@
         <repository>
             <id>edc-release</id>
             <url>https://repository-eurotech.forge.cloudbees.com/release/</url>
+        </repository>
+        <repository>
+            <id>kura-release</id>
+            <url>https://repo.eclipse.org/content/repositories/kura-releases/</url>
         </repository>
     </repositories>
     <dependencies>
