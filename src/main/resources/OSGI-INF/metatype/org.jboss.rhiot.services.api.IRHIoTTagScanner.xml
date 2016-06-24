@@ -93,15 +93,6 @@ Metatype Service information for the IRHIoTTagScanner
             default="A0:E6:F8:AD:2E:82"
             description="Address of RHIoTTag to perform extra debug logging for"/>
 
-        <!-- The mappings from the user tags BLE address to an assigned name -->
-        <AD id="gw.tag0" type="String" name="gw.tag0" description="The address and name for RHIoTTag#0" cardinality="2" default="01:02:03:04:00,MyTag#0"/>
-        <AD id="gw.tag1" type="String" name="gw.tag1" description="The address and name for RHIoTTag#1" cardinality="2" default="01:02:03:04:01,MyTag#1"/>
-        <AD id="gw.tag2" type="String" name="gw.tag2" description="The address and name for RHIoTTag#2" cardinality="2" default="01:02:03:04:02,MyTag#2"/>
-        <AD id="gw.tag3" type="String" name="gw.tag3" description="The address and name for RHIoTTag#3" cardinality="2" default="01:02:03:04:03,MyTag#3"/>
-        <AD id="gw.tag4" type="String" name="gw.tag4" description="The address and name for RHIoTTag#4" cardinality="2" default="01:02:03:04:04,MyTag#4"/>
-        <AD id="gw.tag5" type="String" name="gw.tag5" description="The address and name for RHIoTTag#5" cardinality="2" default="01:02:03:04:05,MyTag#5"/>
-        <AD id="gw.tag6" type="String" name="gw.tag6" description="The address and name for RHIoTTag#6" cardinality="2" default="01:02:03:04:06,MyTag#6"/>
-        <AD id="gw.tag7" type="String" name="gw.tag7" description="The address and name for RHIoTTag#7" cardinality="2" default="01:02:03:04:07,MyTag#7"/>
     </OCD>
 
     <Designate pid="org.jboss.rhiot.services.api.IRHIoTTagScanner">

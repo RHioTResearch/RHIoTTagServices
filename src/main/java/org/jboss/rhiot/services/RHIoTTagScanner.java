@@ -5,6 +5,7 @@ import org.jboss.rhiot.ble.bluez.AdStructure;
 import org.jboss.rhiot.ble.bluez.HCIDump;
 import org.jboss.rhiot.ble.bluez.IAdvertEventCallback;
 import org.jboss.rhiot.ble.bluez.RHIoTTag;
+import org.jboss.rhiot.services.api.IGatewayTagConfig;
 import org.jboss.rhiot.services.api.IRHIoTTagScanner;
 import org.jboss.rhiot.services.fsm.GameModel;
 import org.jboss.rhiot.services.fsm.GameStateMachine;
@@ -68,6 +69,7 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
    private CloudService cloudService;
    /** Client connection to the cloud service */
    private CloudClient cloudClient;
+   private IGatewayTagConfig tagConfig;
    /** Servlet used for REST and debugging */
    private RHIoTServlet servlet;
    private FileWriter debugWriter;
@@ -98,6 +100,28 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
          info("Listening at /rhiot for REST requests");
       } catch (Exception e) {
          e.printStackTrace();
+      }
+   }
+
+   public void setGatewayTagConfig(IGatewayTagConfig tagConfig) {
+      this.tagConfig = tagConfig;
+      info("setGatewayTagConfig");
+   }
+   public void unsetGatewayTagConfig(IGatewayTagConfig tagConfig) {
+      this.tagConfig = null;
+      info("unsetGatewayTagConfig");
+   }
+   public void updatedGatewayTagConfig(IGatewayTagConfig tagConfig) {
+      info("updatedGatewayTagConfig");
+      this.tagConfig = tagConfig;
+      if(tagConfig != null) {
+         info("Populating tag mappings from tagConfig");
+         for(int n = 0; n < 8; n ++) {
+            String address = tagConfig.getTagAddress(n);
+            String name = tagConfig.getTagName(n);
+            if(address != null && name != null)
+               updateTagInfo(address, name);
+         }
       }
    }
 
@@ -238,6 +262,16 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
 
       // Create an executor to handle tag events
       publisher = Executors.newSingleThreadExecutor();
+
+      if(tagConfig != null) {
+         info("Populating tag mappings from tagConfig");
+         for(int n = 0; n < 8; n ++) {
+            String address = tagConfig.getTagAddress(n);
+            String name = tagConfig.getTagName(n);
+            if(address != null && name != null)
+               updateTagInfo(address, name);
+         }
+      }
 
       // Update the properties
       updated(properties);
