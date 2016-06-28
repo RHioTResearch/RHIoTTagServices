@@ -46,7 +46,7 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
    private static final String PUBLISH_TOPIC_PROP_NAME = "publish.semanticTopic";
    private static final String PUBLISH_QOS_PROP_NAME = "publish.qos";
    private static final String PUBLISH_RETAIN_PROP_NAME = "publish.retain";
-
+   private static final int MAX_TAGS = 9;
    /** The configuration properties passed in during activation */
    private Map<String, Object> properties;
    /** The mapping from the tag BLE address to a user assigned name */
@@ -116,7 +116,7 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
       this.tagConfig = tagConfig;
       if(tagConfig != null) {
          info("Populating tag mappings from tagConfig");
-         for(int n = 0; n < 8; n ++) {
+         for(int n = 0; n < 9; n ++) {
             String address = tagConfig.getTagAddress(n);
             String name = tagConfig.getTagName(n);
             if(address != null && name != null)
@@ -265,7 +265,7 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
 
       if(tagConfig != null) {
          info("Populating tag mappings from tagConfig");
-         for(int n = 0; n < 8; n ++) {
+         for(int n = 0; n < MAX_TAGS; n ++) {
             String address = tagConfig.getTagAddress(n);
             String name = tagConfig.getTagName(n);
             if(address != null && name != null)
@@ -286,6 +286,10 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
       info("RHIoTTagScanner.deactivate; Bundle " + APP_ID + " has stopped!\n");
    }
 
+   /**
+    * Called to update the service configurable properties
+    * @param properties
+    */
    protected void updated(Map<String, Object> properties) {
       info("RHIoTTagScanner.updated; Bundle " + APP_ID + " has updated!\n");
       String hciDev = (String) properties.get("hciDev");
@@ -324,10 +328,6 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
             Object value = entry.getValue();
             String type = value != null ? value.getClass().getName() : "none";
             info("New property - %s = %s of type: %s\n", key, value, type);
-            if (key.startsWith("gw.tag")) {
-               String[] pair = (String[]) value;
-               updateTagInfo(pair[0], pair[1]);
-            }
          }
       }
       // Setup scanner
@@ -356,6 +356,10 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
       log.info(msg);
    }
 
+   /**
+    * Create a new game state machine
+    * @return
+    */
    private GameStateMachine newStateMachine() {
       GameModel gameModel = new GameModel();
       gameModel.setGameDuration(gameDurationSecs);
@@ -370,6 +374,13 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
       return gsm;
    }
 
+   /**
+    * Determine the game event from the tag and current state. This advances the state machine to the next
+    * state
+    * @param gsm - the game state machine
+    * @param tag - the tag ble event information
+    * @return the state machine event
+    */
    private GameStateMachine.GameEvent determineEvent(GameStateMachine gsm, RHIoTTag tag) {
       GameStateMachine.GameEvent event = GameStateMachine.GameEvent.NOOP;
 
@@ -432,8 +443,8 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
    }
 
    /**
-    *
-    * @param tag
+    * Handle the tag ble event information asynchronously
+    * @param tag - ble event information
     * @return the future for the handleTag result
     * @see #handleTag(RHIoTTag)
     */
@@ -443,8 +454,9 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
    }
 
    /**
-    *
-    * @param tag
+    * Handle the tag ble event information. This finds or creates a game state machine for the tag and then
+    * determines the game event and advances the game state machine.
+    * @param tag - the ble event information
     * @return the current state of the tag's game
     */
    GameStateMachine.GameState handleTag(RHIoTTag tag) {

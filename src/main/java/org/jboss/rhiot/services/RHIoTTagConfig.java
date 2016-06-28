@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RHIoTTagConfig implements ConfigurableComponent, IGatewayTagConfig {
     private static final Logger log = LoggerFactory.getLogger(RHIoTTagConfig.class);
+    private static final int MAX_TAGS = 9;
     /** The mapping from the tag BLE address to a user assigned name */
     private Map<String, String> addressToNameMap;
     private ArrayList<String> addresses;
@@ -51,7 +52,7 @@ public class RHIoTTagConfig implements ConfigurableComponent, IGatewayTagConfig 
     protected void updated(Map<String, Object> properties) {
         log.info("Updated, properties="+properties);
 
-        for(int n = 0; n < 8; n ++) {
+        for(int n = 0; n < MAX_TAGS; n ++) {
             String key = "gw.tag" + n;
             String[] info = (String[]) properties.get(key);
             if(info != null) {

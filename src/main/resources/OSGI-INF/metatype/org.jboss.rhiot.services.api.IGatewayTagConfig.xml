@@ -28,6 +28,7 @@ Metatype Service information for the IRHIoTTagScanner
         <AD id="gw.tag5" type="String" name="gw.tag5" description="The address and name for RHIoTTag#5" cardinality="2" default="01:02:03:04:05,MyTag#5"/>
         <AD id="gw.tag6" type="String" name="gw.tag6" description="The address and name for RHIoTTag#6" cardinality="2" default="01:02:03:04:06,MyTag#6"/>
         <AD id="gw.tag7" type="String" name="gw.tag7" description="The address and name for RHIoTTag#7" cardinality="2" default="01:02:03:04:07,MyTag#7"/>
+        <AD id="gw.tag8" type="String" name="gw.tag8" description="The address and name for RHIoTTag#8" cardinality="2" default="01:02:03:04:08,MyTag#8"/>
 
     </OCD>
 
