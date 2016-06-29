@@ -78,12 +78,21 @@ Metatype Service information for the IRHIoTTagScanner
             default="300"
             description="The time in seconds a game lasts."/>
 
-        <AD id="cloud.password"
-            name="cloud.password"
-            type="Password"
+        <AD id="game.resetThreshold"
+            name="game.resetThreshold"
+            type="Integer"
             cardinality="0"
-            required="false"
-            description="The password to use for the CloudClient connections."/>
+            required="true"
+            default="1500"
+            description="The lux threshold needed to reset the last shot"/>
+
+        <AD id="game.hitThreshold"
+            name="game.hitThreshold"
+            type="Integer"
+            cardinality="0"
+            required="true"
+            default="25000"
+            description="The lux threshold above which a hit is detected"/>
 
         <AD id="debug.address"
             name="debug.address"
