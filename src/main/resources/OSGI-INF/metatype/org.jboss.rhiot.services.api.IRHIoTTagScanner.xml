@@ -83,7 +83,7 @@ Metatype Service information for the IRHIoTTagScanner
             type="Integer"
             cardinality="0"
             required="true"
-            default="1500"
+            default="10000"
             description="The lux threshold needed to reset the last shot"/>
 
         <AD id="game.hitThreshold"
