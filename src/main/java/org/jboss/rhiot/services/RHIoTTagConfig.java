@@ -52,6 +52,8 @@ public class RHIoTTagConfig implements ConfigurableComponent, IGatewayTagConfig 
     protected void updated(Map<String, Object> properties) {
         log.info("Updated, properties="+properties);
 
+        addresses.clear();
+        names.clear();
         for(int n = 0; n < MAX_TAGS; n ++) {
             String key = "gw.tag" + n;
             String[] info = (String[]) properties.get(key);

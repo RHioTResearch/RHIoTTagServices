@@ -65,6 +65,8 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
    private HighScore highScore;
    /** The minimum raw lux value needed for a hit */
    private int luxHitThreshold = 20000;
+   /** The maximum raw lux value the sensor needs to fall below to reset the last hit */
+   private int luxResetThreshold = 10000;
    /** ESF cloud service */
    private CloudService cloudService;
    /** Client connection to the cloud service */
@@ -303,15 +305,10 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
          skipJniInitialization = (Boolean) properties.get("skipJniInitialization");
       info("hciDev=%s\n", hciDev);
 
-      String cloudPassword = (String) properties.get("cloud.password");
-      if(cloudPassword == null) {
-         // Try the environment
-         cloudPassword = System.getenv("CLOUD_PASSWORD");
-      }
-      if(cloudPassword != null) {
-         servlet.setCloudPassword(cloudPassword);
-         info("Set cloud password on RHIoTServlet");
-      }
+      luxHitThreshold = (int) properties.get("game.hitThreshold");
+      info("Using luxHitThreshold=%d", luxHitThreshold);
+      luxResetThreshold = (int) properties.get("game.resetThreshold");
+      info("Using luxResetThreshold=%d", luxResetThreshold);
       debugAddress = (String) properties.get("debug.address");
 
       gameDurationSecs = (int) properties.get("game.duration");
@@ -418,7 +415,7 @@ public class RHIoTTagScanner implements ConfigurableComponent, CloudClientListen
       }
       // In reset must wait for light sensor to drop back down
       if(state == GameStateMachine.GameState.RESETTING) {
-         if(!tag.isLightSensorAbove(luxHitThreshold/2))
+         if(!tag.isLightSensorAbove(luxResetThreshold))
             return GameStateMachine.GameEvent.LS_RESET;
          return GameStateMachine.GameEvent.NOOP;
       }
